@@ -1,38 +1,39 @@
 terraform {
   required_providers {
-    http = {
-      source  = "hashicorp/http"
+    null = {
+      source  = "hashicorp/null"
       version = "~> 3.0"
     }
   }
 }
 
-provider "http" {}
+provider "null" {}
 
 variable "render_api_key" {
   description = "API key for Render"
+  type        = string
 }
 
-resource "http_request" "web_service" {
-  url    = "https://api.render.com/v1/services"
-  method = "POST"
-
-  headers = {
-    Authorization = "Bearer ${var.render_api_key}"
-    Content-Type  = "application/json"
-  }
-
-  request_body = jsonencode({
-    type = "web_service",
-    name = "fastapi-app",
-    env  = "docker",
-    repo = {
-      url = "https://github.com/<your_username>/webapp-docker-terraform-render"
-    },
-    branch        = "main",
-    plan          = "free",
-    region        = "oregon",
-    dockerContext = ".",
-    dockerfilePath = "Dockerfile"
-  })
+resource "null_resource" "create_render_service" {
+  provisioner "local-exec" {
+    command = <<EOT
+      curl -X POST https://api.render.com/v1/services \
+      -H "Authorization: Bearer ${var.render_api_key}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "type": "web_service",
+        "name": "fastapi-app",
+        "env": "docker",
+        "repo": {
+          "url": "https://github.com/srujan75/webapp-docker-terraform-render"
+        },
+        "branch": "main",
+        "plan": "free",
+        "region": "oregon",
+        "dockerContext": ".",
+        "dockerfilePath": "Dockerfile"
+      }'
+    EOT
+    interpreter = ["/bin/bash", "-c"]
+   }
 }
