@@ -1,8 +1,24 @@
- resource "null_resource" "deploy_to_render" {
+terraform {
+  required_providers {
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.0"
+    }
+  }
+}
+
+provider "null" {}
+
+variable "render_api_key" {
+  description = "Render API key"
+  type        = string
+}
+
+resource "null_resource" "deploy_to_render" {
   provisioner "local-exec" {
     command = <<EOT
       echo "Calling Render API..."
-      RESPONSE=$(curl -s -w "%{http_code}" -o response.json -X POST https://api.render.com/v1/services \
+      RESPONSE=$(curl -s -w "%%{http_code}" -o response.json -X POST https://api.render.com/v1/services \
         -H "Authorization: Bearer ${var.render_api_key}" \
         -H "Content-Type: application/json" \
         -d '{
